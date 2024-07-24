@@ -68,6 +68,7 @@ const displayStarredChats = (starredChats) => {
 
             const tempElement = document.createElement('div')
             tempElement.innerHTML = chatsBody
+            tempElement.className = 'starredBody'
             container.insertBefore(tempElement, container.firstChild)
 
             const starred = tempElement.querySelector('.starredItemsList')
@@ -131,7 +132,6 @@ const addStarButton = () => {
         const hrefValue = link.getAttribute('href')
         const chatType = hrefValue.split('/')[1]
         const chatId = hrefValue.split('/')[2]
-        const chatTitle = link.textContent
         const parentElement = link.parentElement
 
         const shadowElementParent = link.querySelector('div.whitespace-nowrap')
@@ -163,6 +163,7 @@ const addStarButton = () => {
                         if (button.getAttribute('is-starred') === 'false') {
                             button.innerHTML = starSvgSolid
                             button.setAttribute('is-starred', 'true')
+                            const chatTitle = link.textContent
                             chrome.runtime.sendMessage({ action: 'starChat', chatId, chatType, chatTitle }, () => updateStarred())
                         } else {
                             chrome.runtime.sendMessage({ action: 'removeChat', chatId, chatType }, () => {
@@ -177,23 +178,60 @@ const addStarButton = () => {
     })
 }
 
+let isTodaySectionObserverSetup = false
+
 // Calls addStarButton function when new data is loaded
 const setupObserver = () => {
     const sidebar = document.querySelector('.h-full.w-\\[260px\\]')
     const chatHistoryNav = sidebar.querySelector('nav[aria-label]')
     const itemsScroll = chatHistoryNav.querySelector('.duration-500.overflow-y-auto')
-    const itemsScrollContainer = itemsScroll.querySelector('.text-token-text-primary')
+    const itemsScrollContainer = itemsScroll.querySelector('.flex.flex-col.text-token-text-primary')
 
     const observer = new MutationObserver(mutations => {
         mutations.forEach(() => {
             addStarButton()
+
+            // turn on observer for the latest chats when first data is loaded
+            if (itemsScrollContainer.children.length > 1 && !isTodaySectionObserverSetup) {
+                setupObserverTodaySection()
+                isTodaySectionObserverSetup = true
+            }
         })
     })
 
     observer.observe(itemsScrollContainer, { childList: true })
 }
 
-updateStarred()
+// Check if new items are added in the first section of items to add star button
+const setupObserverTodaySection = () => {
+    const sidebar = document.querySelector('.h-full.w-\\[260px\\]')
+    const chatHistoryNav = sidebar.querySelector('nav[aria-label]')
+    const itemsScroll = chatHistoryNav.querySelector('.duration-500.overflow-y-auto')
+    const itemsScrollContainer = itemsScroll.querySelector('.flex.flex-col.text-token-text-primary')
+    const containers = itemsScrollContainer.children
+    let container = null
 
-addStarButton()
+    for (let item of Array.from(containers)) {
+        if (!item.classList.contains('starredBody')) {
+            container = item
+            break
+        }
+    }
+
+    if (container) {
+        const observer = new MutationObserver(mutations => {
+            mutations.forEach(() => {
+                addStarButton()
+            })
+        })
+
+        observer.observe(container, { childList: true, subtree: true })
+    }
+}
+
+// Wait some time for the sidebar items to load 
+setTimeout(() => {
+    updateStarred()
+}, 500)
+
 setupObserver()
