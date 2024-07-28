@@ -124,25 +124,22 @@ const updateStatus = (chatType, chatId) => {
 }
 
 // Adds star button to every chat element in sidebar
-const addStarButton = () => {
-    const sidebar = document.querySelector('.h-full.w-\\[260px\\]')
-    const links = sidebar.querySelectorAll('a[href^="/"].flex.items-center.gap-2.p-2')
-
+const addStarButton = (links) => {
     links.forEach(link => {
-        const hrefValue = link.getAttribute('href')
-        const chatType = hrefValue.split('/')[1]
-        const chatId = hrefValue.split('/')[2]
-        const parentElement = link.parentElement
+        if (!link.parentElement.querySelector('button.starButton')) {
+            const hrefValue = link.getAttribute('href')
+            const chatType = hrefValue.split('/')[1]
+            const chatId = hrefValue.split('/')[2]
+            const parentElement = link.parentElement
 
-        const shadowElementParent = link.querySelector('div.whitespace-nowrap')
-        const shadowElement = shadowElementParent.querySelector('div')
-        shadowElement.style.width = '4.5rem'
+            const shadowElementParent = link.querySelector('div.whitespace-nowrap')
+            const shadowElement = shadowElementParent.querySelector('div')
+            shadowElement.style.width = '4.5rem'
 
-        if (parentElement) {
-            const span = parentElement.querySelector('span[data-state]')
-            if (span) {
-                span.className = 'flex items-center gap-1'
-                if (!span.querySelector('button.starButton')) {
+            if (parentElement) {
+                const span = parentElement.querySelector('span[data-state]')
+                if (span) {
+                    span.className = 'flex items-center gap-1'
                     const button = document.createElement('button')
                     button.className = 'starButton flex items-center justify-center text-token-text-secondary transition hover:text-token-text-primary'
                     button.innerHTML = starSvgOutline
@@ -178,8 +175,6 @@ const addStarButton = () => {
     })
 }
 
-let isTodaySectionObserverSetup = false
-
 // Calls addStarButton function when new data is loaded
 const setupObserver = () => {
     const sidebar = document.querySelector('.h-full.w-\\[260px\\]')
@@ -189,13 +184,10 @@ const setupObserver = () => {
 
     const observer = new MutationObserver(mutations => {
         mutations.forEach(() => {
-            addStarButton()
-
-            // turn on observer for the latest chats when first data is loaded
-            if (itemsScrollContainer.children.length > 1 && !isTodaySectionObserverSetup) {
-                setupObserverTodaySection()
-                isTodaySectionObserverSetup = true
-            }
+            const sidebar = document.querySelector('.h-full.w-\\[260px\\]')
+            const links = sidebar.querySelectorAll('a[href^="/"].flex.items-center.gap-2.p-2')
+            addStarButton(links)
+            setupObserverTodaySection()
         })
     })
 
@@ -221,7 +213,9 @@ const setupObserverTodaySection = () => {
     if (container) {
         const observer = new MutationObserver(mutations => {
             mutations.forEach(() => {
-                addStarButton()
+                const todaySection = container.querySelector('div.relative.mt-5')
+                const links = todaySection.querySelectorAll('a[href^="/"].flex.items-center.gap-2.p-2')
+                addStarButton(links)
             })
         })
 
