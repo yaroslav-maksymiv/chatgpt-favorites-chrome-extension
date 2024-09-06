@@ -125,6 +125,8 @@ const updateStatus = (chatType, chatId) => {
 
 // Adds star button to every chat element in sidebar
 const addStarButton = (links) => {
+    console.log(links, 'links');
+    
     links.forEach(link => {
         if (!link.parentElement.querySelector('button.starButton')) {
             const hrefValue = link.getAttribute('href')
@@ -178,6 +180,8 @@ const addStarButton = (links) => {
 // Calls addStarButton function when new data is loaded
 const setupObserver = () => {
     const sidebar = document.querySelector('.h-full.w-\\[260px\\]')
+    console.log(sidebar, 'sidebar');
+    
     const chatHistoryNav = sidebar.querySelector('nav[aria-label]')
     const itemsScroll = chatHistoryNav.querySelector('.duration-500.overflow-y-auto')
     const itemsScrollContainer = itemsScroll.querySelector('.flex.flex-col.text-token-text-primary')
@@ -223,9 +227,8 @@ const setupObserverTodaySection = () => {
     }
 }
 
-// Wait some time for the sidebar items to load 
+// Wait some time for the sidebar to load 
 setTimeout(() => {
+    setupObserver()
     updateStarred()
 }, 500)
-
-setupObserver()
